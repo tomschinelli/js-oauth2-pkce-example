@@ -1,0 +1,14 @@
+version: '3'
+
+volumes:
+  mysql_data:
+    driver: local
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+    ports:
+      - 8080:8080
