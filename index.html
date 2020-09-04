@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .data{
+            display: grid;
+            width: 100%;
+            grid-template-columns: 1fr auto;
+            grid-template-areas:
+                    'code code'
+                    'tokens introspection';
+        }
+        .data > .code{grid-area: code}
+        .tokens > .code{grid-area: tokens}
+        .introspection > .code{grid-area: introspection}
+
+        pre{
+            white-space:pre-wrap;
+            word-break: break-all;
+        }
+
+        label{
+            font-weight: bold;
+            color: #4e0000;
+        }
+    </style>
+</head>
+<body>
+
+</body>
+
+<div>
+    <button id="login">login</button>
+    <button id="logout">logout</button>
+</div>
+<div class="error">
+    <label>error: </label>
+    <pre id="error"></pre>
+</div>
+<div class="data">
+
+    <div class="code">
+        <label>code: </label>
+        <div id="code"></div>
+    </div>
+    <div class="tokens">
+        <label>tokens: </label>
+        <pre id="tokens"></pre>
+    </div>
+    <div class="userinfo">
+        <label>userinfo: </label>
+        <pre id="userinfo"></pre>
+    </div>
+</div>
+
+<script src="scripts/browser.js"></script>
+<script src="scripts/pkce.js"></script>
+<script src="scripts/oauth.js"></script>
+<script>
+    var config = {
+        client_id: "local-client",
+        redirect_uri: window.location.origin+window.location.pathname,
+        requested_scopes: "openid offline_access",
+        authorization_endpoint: "http://localhost:8080/auth/realms/myrealm/protocol/openid-connect/auth",
+        token_endpoint: "http://localhost:8080/auth/realms/myrealm/protocol/openid-connect/token",
+        introspection_endpoint: "http://localhost:8080/auth/realms/myrealm/protocol/openid-connect/token/introspect",
+        userinfo_endpoint: "http://localhost:8080/auth/realms/myrealm/protocol/openid-connect/userinfo",
+        logout_endpoint: "http://localhost:8080/auth/realms/myrealm/protocol/openid-connect/logout",
+    };
+
+    const ui = {
+        error: document.getElementById("error"),
+        login: document.getElementById("login"),
+        logout: document.getElementById("logout"),
+        code: document.getElementById("code"),
+        tokens: document.getElementById("tokens"),
+        userinfo: document.getElementById("userinfo"),
+    }
+    const oauth = new Oauth2(config)
+
+    ui.login.addEventListener("click",()=>oauth.loginPKCE())
+    ui.logout.addEventListener("click",()=>oauth.logout())
+    const run = async()=>{
+        const error =Browser.q.error;
+        const code =Browser.q.code;
+        const state =Browser.q.state;
+        if(error){
+            ui.error.innerText= JSON.stringify(error,null, 2);
+        }
+        if(state && state !== oauth.getLastState()){
+            ui.error.innerText= "state is not equal"
+        }
+        if(code){
+            ui.code.innerText= code;
+            const [tokens, tokenError] = await oauth.acquireTokens(code)
+            if(tokenError){
+                ui.error.innerText= JSON.stringify(tokenError,null, 2);
+                return;
+            }
+            if(tokens){
+                ui.tokens.innerText= JSON.stringify(tokens,null, 2);
+            }
+
+            const userData = await oauth.fetchUserInfo()
+            ui.userinfo.innerText= JSON.stringify(userData,null, 2);
+
+        }
+    }
+    run().catch(console.error)
+
+
+</script>
+</html>
