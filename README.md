@@ -6,6 +6,13 @@ Basic example for OAuth2.1 + OpenId Connect
 ## Provider (keycloak)
 I used keycloak to for this example, but you can use what ever you want.
 
+### TL;DR
+
+1. run ```docker-compose up```
+    
+2. create a provider or change the config to match your provider.
+
+3. Open the website
 
 ### STEP 0: run your webserver
 
